@@ -2,3 +2,10 @@
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+##Rodando os testes
+
+python -m pytest app/tests/unit_tests/
+
+python -m pytest --cov=app --cov-report=xml  app/tests/ 
+python -m pytest --cov=app --cov-report=term-missing  app/tests/
