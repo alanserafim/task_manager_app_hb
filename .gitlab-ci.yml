@@ -19,7 +19,7 @@ cache:
 stages:
   - build
   - unit-test
-  - security-scan-bandit
+  - security-scan
   - dependency-scan
   - deploy
 
@@ -56,7 +56,7 @@ unit-test-job:
     - if: $CI_COMMIT_BRANCH == "main"
 
 bandit_scan:
-  stage: security-scan-bandit
+  stage: security-scan
   image: python:3.9-slim
   before_script:
     - pip install --upgrade pip
@@ -73,7 +73,7 @@ bandit_scan:
   allow_failure: true
 
 dependency_check:
-  stage: dependency_scan
+  stage: dependency-scan
   image: owasp/dependency-check:latest
   script:
     - dependency-check.sh --scan requirements.txt --format JSON --out dependency-check-report.json
