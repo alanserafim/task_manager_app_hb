@@ -81,9 +81,9 @@ dependency_check:
   artifacts:
     when: always
     reports:
-      dependency_scanning: dependency-check-report.json
+      dependency_scanning: dependency-check-report-task-manager-app.json
     paths:
-      - dependency-check-report.json
+      - dependency-check-report-task-manager-app.json
     expire_in: 7 days
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
