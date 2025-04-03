@@ -76,7 +76,8 @@ dependency_check:
   stage: dependency-scan
   image: owasp/dependency-check:latest
   script:
-    - dependency-check.sh --scan requirements.txt --format JSON --out dependency-check-report.json
+    - dependency-check.sh --scan requirements.txt --format JSON --out ./dependency-check-report.json
+    - ls -la 
   artifacts:
     when: always
     reports:
@@ -86,6 +87,7 @@ dependency_check:
     expire_in: 7 days
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+  allow_failure: false
 
 deploy_job:
     stage: deploy
