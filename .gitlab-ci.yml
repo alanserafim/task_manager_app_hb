@@ -60,6 +60,7 @@ bandit_scan:
   script:
     - bandit -r app/ --exclude tests/ -f json -o bandit-report.json
   artifacts:
+    when: always
     reports:
       sast: bandit-report.json
     paths:
