@@ -20,6 +20,7 @@ cache:
 stages:
   - build
   - unit-test
+  - security-scan-sast
   - deploy
 
 build_job:
@@ -49,6 +50,22 @@ unit-test-job:
         path: coverage.xml
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+
+bandit_scan:
+  stage: security_scan
+  image: python:3.9-slim
+  before_script:
+    - pip install --upgrade pip
+    - pip install bandit
+  script:
+    - bandit -r app/ --exclude tests/ -f json -o bandit-report.json
+  artifacts:
+    reports:
+      sast: bandit-report.json
+    paths:
+      - bandit-report.json
+    expire_in: 7 days
+  allow_failure: true
 
 deploy_job:
     stage: deploy
