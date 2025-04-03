@@ -41,7 +41,7 @@ unit-test-job:
     - pip install --upgrade pip
     - pip install -r requirements.txt
   script:
-    - pytest appt/tests/unit_tests/ --cov --cov-report=json  # Testes unitários
+    - pytest app/tests/unit_tests/ --cov --cov-report=json  # Testes unitários
   artifacts:
     reports:
       coverage_report:
