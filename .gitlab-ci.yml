@@ -76,7 +76,7 @@ dependency_check:
   stage: dependency-scan
   image: owasp/dependency-check:latest
   script:
-    - dependency-check.sh --scan requirements.txt --format JSON --out ./dependency-check-report.json
+    - dependency-check.sh --scan requirements.txt --format JSON --out . --project "task-manager-app"
     - ls -la 
   artifacts:
     when: always
