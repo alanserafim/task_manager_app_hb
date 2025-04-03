@@ -10,7 +10,6 @@ variables:
   POSTGRES_HOST_AUTH_METHOD: "trust"
   DATABASE_URL: "postgresql://$POSTGRES_USER@postgres/$POSTGRES_DB"
 
-
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -21,6 +20,7 @@ stages:
   - build
   - unit-test
   - security-scan-bandit
+  - dependency-scan
   - deploy
 
 build_job:
@@ -42,7 +42,7 @@ unit-test-job:
     - pip install --upgrade pip
     - pip install -r requirements.txt
   script:
-    - pytest app/tests/unit_tests/ --cov --cov-report=json  --cov-report=html # Testes unitários
+    - pytest app/tests/unit_tests/ --cov --cov-report=xml  # Testes unitários
   artifacts:
     when: always
     reports:
@@ -71,6 +71,21 @@ bandit_scan:
       - bandit-report.json
     expire_in: 7 days
   allow_failure: true
+
+dependency_check:
+  stage: dependency_scan
+  image: owasp/dependency-check:latest
+  script:
+    - dependency-check.sh --scan requirements.txt --format JSON --out dependency-check-report.json
+  artifacts:
+    when: always
+    reports:
+      dependency_scanning: dependency-check-report.json
+    paths:
+      - dependency-check-report.json
+    expire_in: 7 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
 
 deploy_job:
     stage: deploy
