@@ -20,7 +20,7 @@ cache:
 stages:
   - build
   - unit-test
-  - security-scan-sast
+  - security-scan-bandit
   - deploy
 
 build_job:
@@ -52,7 +52,7 @@ unit-test-job:
     - if: $CI_COMMIT_BRANCH == "main"
 
 bandit_scan:
-  stage: security_scan
+  stage: security-scan-bandit
   image: python:3.9-slim
   before_script:
     - pip install --upgrade pip
