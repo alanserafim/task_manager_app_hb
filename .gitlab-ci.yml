@@ -47,9 +47,10 @@ unit-test-job:
     when: always
     reports:
       coverage_report:
-        path: 
-          - coverage.xml
-          - htmlcov/
+        path: coverage.xml  # Apenas um arquivo é permitido
+    paths:
+      - coverage.xml
+      - htmlcov/
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
