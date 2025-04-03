@@ -48,8 +48,8 @@ unit-test-job:
     reports:
       coverage_report:
         path: 
-        - coverage.xml
-        - htmlcov/
+          - coverage.xml
+          - htmlcov/
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
