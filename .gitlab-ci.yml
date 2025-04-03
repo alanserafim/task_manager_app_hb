@@ -46,6 +46,7 @@ unit-test-job:
   artifacts:
     when: always
     reports:
+      coverage_format: cobertura
       coverage_report:
         path: coverage.xml  # Apenas um arquivo é permitido
     paths:
