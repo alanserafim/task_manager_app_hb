@@ -2,6 +2,9 @@ import pytest
 from flask import Flask
 from app.main import db  # Certifique-se de importar o objeto 'db' da sua aplicação
 from app.models import User, Task
+from datetime import datetime
+from app.main import app as flask_app  # Importa a aplicação real
+
 
 @pytest.fixture(scope="session")
 def app():
@@ -34,3 +37,32 @@ def db_session(app):
         transaction.rollback()  # Desfaz as alterações realizadas no teste
         connection.close()
         session.remove()
+
+@pytest.fixture(scope="session")
+def test_app():
+    """Configura a aplicação para os testes"""
+    flask_app.config["TESTING"] = True
+    flask_app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    flask_app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    with flask_app.app_context():
+        db.create_all()
+        yield flask_app
+        db.drop_all()
+
+@pytest.fixture
+def client(test_app):
+    """Cria um cliente de teste usando a fixture test_app"""
+    with test_app.test_client() as client:
+        with test_app.app_context():
+            print(test_app.url_map)  # Exibe todas as rotas registradas
+            yield client
+
+
+@pytest.fixture
+def new_task(new_user, db_session):
+    """Cria uma tarefa associada ao usuário de teste"""
+    task = Task(content='Test Task', user_id=new_user.id, date_posted=datetime.utcnow())
+    db_session.add(task)
+    db_session.commit()
+    return task

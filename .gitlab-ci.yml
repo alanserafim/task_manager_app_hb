@@ -20,7 +20,6 @@ cache:
 stages:
   - build
   - unit-test
-  - integration-test
   - deploy
 
 build_job:
@@ -42,7 +41,7 @@ unit-test-job:
     - pip install --upgrade pip
     - pip install -r requirements.txt
   script:
-    - pytest todo_project/todo_project/tests/unit_tests/ --cov --cov-report=json  # Testes unitários
+    - pytest appt/tests/unit_tests/ --cov --cov-report=json  # Testes unitários
   artifacts:
     reports:
       coverage_report:
@@ -50,23 +49,6 @@ unit-test-job:
         path: coverage.xml
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-
-# integration-test-job:
-#   stage: integration-test
-#   image: python:3.9-slim
-#   services:
-#     - postgres:13  # Banco de dados para testes de integração
-#   before_script:
-#     - python -m venv venv
-#     - source venv/bin/activate
-#     - pip install --upgrade pip
-#     - pip install -r requirements.txt
-#     # Configura o banco de dados
-#     - psql -h postgres -U $POSTGRES_USER -d $POSTGRES_DB -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
-#   script:
-#     - pytest tests/integration_tests/ --cov=app --cov-append  # Testes de integração
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "main"
 
 deploy_job:
     stage: deploy
