@@ -15,7 +15,6 @@ cache:
   paths:
     - venv/
     - .cache/pip
-    - $DATA_DIRECTORY/
 
 stages:
   - build
@@ -74,39 +73,19 @@ bandit_scan:
   allow_failure: true
 
 dependency_check:
-  stage: dependency-scan
-  image: docker:20.10.16
-  services:
-    - docker:20.10.16-dind
-  variables:
-    NVD_API_KEY: "$NVD_API_KEY"
-  before_script:
-    - mkdir -p reports
+  image: owasp/dependency-check:8.3.1 # Replace with a specific stable version
+  stage: dependency-check
   script:
-    - |
-      docker run --rm \
-        -v "$CI_PROJECT_DIR:/app" \
-        -v "$CI_PROJECT_DIR/reports:/app/reports" \
-        -e JAVA_OPTS="-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false --enable-preview" \
-        owasp/dependency-check:latest \
-        dependency-check.sh \
-        --scan /app \
-        --format JSON \
-        --out /app/reports \
-        --project "task-manager-app" \
-        --nvdApiKey "$NVD_API_KEY" \
-        --failOnCVSS 11
-    - ls -la reports/
-    
+    - mkdir -p reports
+    - docker run --rm \
+      -v "$PWD:/src" \
+      -v "$PWD/reports:/reports" \
+      owasp/dependency-check:8.3.1 --scan /src --out /reports --format JSON
   artifacts:
-    when: always
-    paths:
-      - reports/
     reports:
-      dependency_scanning: reports/dependency-check-report.json
-    expire_in: 7 days
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+      paths:
+        - reports/dependency-check-report.json
+      expire_in: 1 week
 
 deploy_job:
     stage: deploy
