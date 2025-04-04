@@ -85,6 +85,8 @@ dependency_check:
   script:
     - docker run --rm 
       -v "$CI_PROJECT_DIR:/app" 
+      -v "$CI_PROJECT_DIR/reports:/app/reports"
+      -e JAVA_OPTS="-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false"
       owasp/dependency-check:latest 
       dependency-check.sh 
       --scan /app 
@@ -92,6 +94,7 @@ dependency_check:
       --out /app/reports 
       --project "task-manager-app" 
       --nvdApiKey "$NVD_API_KEY"
+      --failOnCVSS 11
   artifacts:
     when: always
     paths:
