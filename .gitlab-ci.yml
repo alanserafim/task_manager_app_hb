@@ -83,19 +83,21 @@ dependency_check:
   before_script:
     - mkdir -p reports
   script:
-    - docker run --rm 
-      -v "$CI_PROJECT_DIR:/app" 
-      -v "$CI_PROJECT_DIR/reports:/app/reports"
-      -e JAVA_OPTS="-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false --enable-preview"
-      owasp/dependency-check:latest 
-      dependency-check.sh 
-      --scan /app 
-      --format JSON 
-      --out /app/reports 
-      --project "task-manager-app" 
-      --nvdApiKey "$NVD_API_KEY"
-      --failOnCVSS 11
+    - |
+      docker run --rm \
+        -v "$CI_PROJECT_DIR:/app" \
+        -v "$CI_PROJECT_DIR/reports:/app/reports" \
+        -e JAVA_OPTS="-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false --enable-preview" \
+        owasp/dependency-check:latest \
+        dependency-check.sh \
+        --scan /app \
+        --format JSON \
+        --out /app/reports \
+        --project "task-manager-app" \
+        --nvdApiKey "$NVD_API_KEY" \
+        --failOnCVSS 11
     - ls -la reports/
+    
   artifacts:
     when: always
     paths:
