@@ -77,10 +77,14 @@ dependency_check:
   stage: dependency-scan
   script:
     - mkdir -p reports
-    - docker run --rm \
-      -v "$PWD:/src" \
-      -v "$PWD/reports:/reports" \
-      owasp/dependency-check:8.3.1 --scan /src --out /reports --format JSON
+    - |
+      docker run --rm \
+        -v "$PWD:/src" \
+        -v "$PWD/reports:/reports" \
+        owasp/dependency-check:8.3.1 \
+        --scan /src \
+        --out /reports \
+        --format JSON
   artifacts:
     paths:
       - reports/dependency-check-report.json
