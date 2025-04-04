@@ -74,7 +74,7 @@ bandit_scan:
 
 dependency_check:
   image: owasp/dependency-check:8.3.1 # Replace with a specific stable version
-  stage: dependency-check
+  stage: dependency-scan
   script:
     - mkdir -p reports
     - docker run --rm \
@@ -82,10 +82,9 @@ dependency_check:
       -v "$PWD/reports:/reports" \
       owasp/dependency-check:8.3.1 --scan /src --out /reports --format JSON
   artifacts:
-    reports:
-      paths:
-        - reports/dependency-check-report.json
-      expire_in: 1 week
+    paths:
+      - reports/dependency-check-report.json
+    expire_in: 1 week
 
 deploy_job:
     stage: deploy
