@@ -73,11 +73,14 @@ bandit_scan:
   allow_failure: true
 
 dependency_check:
-  image: owasp/dependency-check:8.3.1
+  image: 
+    name: owasp/dependency-check:8.3.1
+    entrypoint: [""]
   stage: dependency-scan
   script:
     - mkdir -p reports
-    - dependency-check.sh --scan . --format JSON --project "$CI_PROJECT_NAME" --out reports
+    - /usr/share/dependency-check/bin/dependency-check.sh --scan . --enableExperimental --format JSON --project "$CI_PROJECT_NAME" --out reports
+    # - dependency-check.sh --scan . --format JSON --project "$CI_PROJECT_NAME" --out reports
   artifacts:
     paths:
       - reports/dependency-check-report.json
