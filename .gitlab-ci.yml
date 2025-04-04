@@ -9,10 +9,7 @@ variables:
   POSTGRES_PASSWORD: ""
   POSTGRES_HOST_AUTH_METHOD: "trust"
   DATABASE_URL: "postgresql://$POSTGRES_USER@postgres/$POSTGRES_DB"
-  DC_VERSION: "latest"
-  DC_DIRECTORY: "$CI_PROJECT_DIR/OWASP-Dependency-Check"
-  DATA_DIRECTORY: "$DC_DIRECTORY/data"
-
+  
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -84,32 +81,26 @@ dependency_check:
   variables:
     NVD_API_KEY: "$NVD_API_KEY"
   before_script:
-    - mkdir -p $DATA_DIRECTORY
-    - mkdir -p $CI_PROJECT_DIR/odc-reports
+    - mkdir -p reports
   script:
-    - docker pull owasp/dependency-check:${DC_VERSION}
-    - docker run "$(pwd):/app" --rm 
-      -e user=$USER 
-      -u $(id -u):$(id -g) 
-      -v $CI_PROJECT_DIR:/src:z 
-      -v $DATA_DIRECTORY:/usr/share/dependency-check/data:z 
-      -v $CI_PROJECT_DIR/odc-reports:/report:z 
-      owasp/dependency-check:${DC_VERSION} 
+    - docker run --rm 
+      -v "$CI_PROJECT_DIR:/app" 
+      owasp/dependency-check:latest 
+      dependency-check.sh 
       --scan /app 
-      --format "JSON" 
-      --project "$CI_PROJECT_NAME" 
-      --out /report 
+      --format JSON 
+      --out /app/reports 
+      --project "task-manager-app" 
       --nvdApiKey "$NVD_API_KEY"
-    - ls -la $CI_PROJECT_DIR/odc-reports/
   artifacts:
+    when: always
     paths:
-      - $CI_PROJECT_DIR/odc-reports/
+      - reports/
     reports:
-      dependency_scanning: $CI_PROJECT_DIR/odc-reports/dependency-check-report.json
+      dependency_scanning: reports/dependency-check-report.json
     expire_in: 7 days
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-  allow_failure: false
 
 deploy_job:
     stage: deploy
