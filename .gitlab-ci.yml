@@ -73,12 +73,11 @@ bandit_scan:
   allow_failure: true
 
 dependency_check:
-  image: owasp/dependency-check:8.3.1 # Replace with a specific stable version
+  image: owasp/dependency-check:8.3.1
   stage: dependency-scan
   script:
     - mkdir -p reports
-    - docker run --rm -v "$PWD:/src" -v "$PWD/reports:/reports" owasp/dependency-check:8.3.1 --scan /src --out /reports --format JSON
-
+    - dependency-check.sh --scan . --format JSON --project "$CI_PROJECT_NAME" --out reports
   artifacts:
     paths:
       - reports/dependency-check-report.json
