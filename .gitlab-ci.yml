@@ -30,26 +30,16 @@ build_job:
    services:
        - docker:20.10.16-dind
    before_script:
-      - echo "--- Debugging Registry Variables ---"
-      - echo "Registry URL:[$CI_REGISTRY]"
-      - echo "Registry User:[$CI_REGISTRY_USER]"
-      - echo "Registry Password Set:[${CI_REGISTRY_PASSWORD:+set}]" # Mostra '[set]' se a variável não estiver vazia
-      - echo "------------------------------------"
-      - |
-        if [ -z "$CI_REGISTRY" ]; then
-          echo "ERRO FATAL: A variável CI_REGISTRY não está definida! Verifique as configurações do Container Registry do projeto."
-          exit 1
-        fi
-
-      - echo "Attempting login to $CI_REGISTRY..."
-      - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-      - echo "Login attempt finished."
+      - echo "Logging into Docker Hub..."
+      - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin docker.io
+      - echo "Login finished."
    script:
-      - docker build -t ex-build-dev:local .
-      - docker tag ex-build-dev:local "$CI_REGISTRY_IMAGE:latest"
-      - echo "Pushing image to $CI_REGISTRY_IMAGE:latest..."
-      - docker push "$CI_REGISTRY_IMAGE:latest"
-      - echo "Push finished."
+    - DOCKERHUB_IMAGE_NAME="docker.io/$DOCKERHUB_USER/task-manager-app-hb" # Ou o nome do seu repo
+    - docker build -t ex-build-dev:local .
+    - docker tag ex-build-dev:local "$DOCKERHUB_IMAGE_NAME:latest"
+    - echo "Pushing image to $DOCKERHUB_IMAGE_NAME:latest..."
+    - docker push "$DOCKERHUB_IMAGE_NAME:latest"
+    - echo "Push finished.""
        
 unit-test-job:
   stage: unit_test
@@ -124,15 +114,17 @@ zap_baseline_scan:
   image: owasp/zap2docker-stable
   variables:
     TARGET_URL: "http://ex-build-dev:5000"
+    APP_IMAGE: "docker.io/$DOCKERHUB_USER/task-manager-app-hb:latest"
+
   services:
-    - name: $CI_REGISTRY_IMAGE:latest
+    - name: $APP_IMAGE
       alias: ex-build-dev
   script:
     - mkdir -p reports
-    - echo "Waiting for application service to start..."
+    - echo "Waiting for application service ($APP_IMAGE) to start..."
     - sleep 30
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
-    - echo "Starting ZAP Baseline Scan on $TARGET_URL using image $CI_REGISTRY_IMAGE:latest"
+    - echo "Starting ZAP Baseline Scan on $TARGET_URL using image $APP_IMAGE"
     - zap-baseline.py -t $TARGET_URL -J gl-dast-report.json -r report.html -w report.md
   artifacts:
     when: always
