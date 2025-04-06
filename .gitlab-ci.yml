@@ -18,10 +18,11 @@ cache:
 
 stages:
   - build
-  - unit-test
-  - security-scan
-  - dependency-scan
+  - unit_test
+  - security_scan
+  - dependency_scan
   - deploy
+  - dast_scan
 
 build_job:
    stage: build
@@ -30,11 +31,11 @@ build_job:
        - docker:20.10.16-dind
    script:
        - docker build -t ex-build-dev:latest .
-   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+#   rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
 
 unit-test-job:
-  stage: unit-test
+  stage: unit_test
   image: python:3.9-slim
   before_script:
     - python -m venv venv
@@ -52,11 +53,11 @@ unit-test-job:
     paths:
       - coverage.xml
       - htmlcov/
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
 
 bandit_scan:
-  stage: security-scan
+  stage: security_scan
   image: python:3.9-slim
   before_script:
     - pip install --upgrade pip
@@ -76,11 +77,10 @@ dependency_check:
   image: 
     name: owasp/dependency-check:8.3.1
     entrypoint: [""]
-  stage: dependency-scan
+  stage: dependency_scan
   script:
     - mkdir -p reports
     - /usr/share/dependency-check/bin/dependency-check.sh --scan . --enableExperimental --format JSON --project "$CI_PROJECT_NAME" --out reports
-    # - dependency-check.sh --scan . --format JSON --project "$CI_PROJECT_NAME" --out reports
   artifacts:
     paths:
       - reports/dependency-check-report.json
@@ -103,5 +103,33 @@ deploy_job:
     script:
         - echo "Deploying the app"
         - docker run -d -p 5000:5000 ex-build-dev:latest
-    rules:
-       - if: $CI_COMMIT_BRANCH == "main"
+#    rules:
+#       - if: $CI_COMMIT_BRANCH == "main"
+
+zap_baseline_scan:
+  stage: dast_scan
+  image: owasp/zap2docker-stable
+  variables:
+    TARGET_URL: "http://ex-build-dev:5000"
+  services:
+    - name: ex-build-dev:latest
+      alias: ex-build-dev
+  script:
+    - mkdir -p reports
+    - echo "Waiting for application service to start..."
+    - sleep 30
+    - wget -q -O /dev/null $TARGET_URL || echo "Warning: Target URL might not be responding yet."
+    # --hook=/zap/auth_hook.py : (Opcional) Se precisar de autenticação, adicione um hook
+    - echo "Starting ZAP Baseline Scan on $TARGET_URL"
+    - zap-baseline.py -t $TARGET_URL -J gl-dast-report.json -r report.html -w report.md --hook=/zap/auth_hook.py
+  artifacts:
+    when: always
+    paths:
+      - reports/report.html
+      - reports/report.md
+      - gl-dast-report.json 
+    reports:
+      dast: gl-dast-report.json
+  allow_failure: true
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main" # Executa apenas na branch main (ou ajuste conforme sua estratégia)
