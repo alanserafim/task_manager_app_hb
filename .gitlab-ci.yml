@@ -120,7 +120,7 @@ deploy_job:
 
 zap_baseline_scan:
   stage: dast_scan
-  image: owasp/zap2docker-stable
+  image: ghcr.io/zaproxy/zaproxy:stable
   variables:
     TARGET_URL: "http://ex-build-dev:5000"
     APP_IMAGE: "docker.io/$DOCKERHUB_USER/task-manager-app-hb:latest"
