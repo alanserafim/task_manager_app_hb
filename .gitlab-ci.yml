@@ -129,8 +129,7 @@ zap_baseline_scan:
     - name: $APP_IMAGE
       alias: ex-build-dev
   script:
-    - mkdir -p reports
-    - mkdir -p /zap/wrk
+    - mkdir -p dast-reports && mkdir -p /zap/wrk
     - echo "Waiting for application service ($APP_IMAGE) to start..."
     - sleep 30
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
@@ -143,6 +142,7 @@ zap_baseline_scan:
     - echo "ZAP script finished. Checking content of reports directory..."
     - ls -la "$CI_PROJECT_DIR/"
     - ls -la "$CI_PROJECT_DIR/reports/"
+    - ls -la "$CI_PROJECT_DIR/zap/wrk/"
     - echo "Finished checking reports directory."
 
   artifacts:
