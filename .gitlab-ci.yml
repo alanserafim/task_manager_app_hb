@@ -142,7 +142,6 @@ zap_baseline_scan:
     #debug
     - echo "ZAP script finished. Checking content of reports directory..."
     - ls -la "$CI_PROJECT_DIR/reports/"
-    - ls -la "$CI_PROJECT_DIR/zap/wrk/"
     - echo "Finished checking reports directory."
     - echo "Copy report file to the artifact path..."
     - cp /zap/wrk/* /reports/
