@@ -140,6 +140,9 @@ zap_baseline_scan:
       -J gl-dast-report.json \
       -r report.html" \
       -w report.md"
+    - cp /zap/wrk/report.md report.md
+    - cp /zap/wrk/report.html report.html
+    - cp /zap/wrk/gl-dast-report.json gl-dast-report.json
     #debug
     - echo "ZAP script finished. Checking content of reports directory..."
     - ls -la "$CI_PROJECT_DIR/"
