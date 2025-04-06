@@ -139,6 +139,10 @@ zap_baseline_scan:
       -J "$CI_PROJECT_DIR/reports/gl-dast-report.json" \
       -r "$CI_PROJECT_DIR/reports/report.html" \
       -w "$CI_PROJECT_DIR/reports/report.md"
+    #debug
+    - echo "ZAP script finished. Checking content of reports directory..."
+    - ls -la "$CI_PROJECT_DIR/reports/"
+    - echo "Finished checking reports directory."
   artifacts:
     when: always
     paths:
