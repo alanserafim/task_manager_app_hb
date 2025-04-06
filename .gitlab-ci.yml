@@ -133,15 +133,15 @@ zap_baseline_scan:
     - echo "Waiting for application service ($APP_IMAGE) to start..."
     - sleep 30
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
-    - echo "Starting ZAP Baseline Scan on $TARGET_URL using image $APP_IMAGE"
-    - zap-baseline.py -t $TARGET_URL -J gl-dast-report.json -r report.html -w report.md
+    - echo "Starting ZAP Baseline Scan on $TARGET_URL using ZAP image ghcr.io/zaproxy/zaproxy:stable"
+    - zap-baseline.py -t $TARGET_URL -J reports/gl-dast-report.json -r reports/report.html -w reports/report.md
   artifacts:
     when: always
     paths:
       - reports/report.html
       - reports/report.md
-      - gl-dast-report.json 
+      - reports/gl-dast-report.json
     reports:
-      dast: gl-dast-report.json
+      dast: reports/gl-dast-report.json
   allow_failure: true
 
