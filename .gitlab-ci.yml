@@ -30,16 +30,25 @@ build_job:
    services:
        - docker:20.10.16-dind
    before_script:
-      - echo "Logging into Docker Hub..."
+      - echo "--- Debugging Docker Hub Variables ---"
+      - echo "Docker Hub User:[$DOCKERHUB_USER]"
+      - echo "Docker Hub Token Set:[${DOCKERHUB_TOKEN:+set}]"
+      - echo "--------------------------------------"
+      - |
+        if [ -z "$DOCKERHUB_USER" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+          echo "ERRO FATAL: Variáveis DOCKERHUB_USER ou DOCKERHUB_TOKEN não estão definidas corretamente nas configurações de CI/CD do projeto!"
+          exit 1
+        fi
+      - echo "Logging into Docker Hub as $DOCKERHUB_USER..."
       - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin docker.io
-      - echo "Login finished."
+      - echo "Login attempt finished."
    script:
-    - DOCKERHUB_IMAGE_NAME="docker.io/$DOCKERHUB_USER/task-manager-app-hb" # Ou o nome do seu repo
-    - docker build -t ex-build-dev:local .
-    - docker tag ex-build-dev:local "$DOCKERHUB_IMAGE_NAME:latest"
-    - echo "Pushing image to $DOCKERHUB_IMAGE_NAME:latest..."
-    - docker push "$DOCKERHUB_IMAGE_NAME:latest"
-    - echo "Push finished.""
+      - DOCKERHUB_IMAGE_NAME="docker.io/$DOCKERHUB_USER/task-manager-app-hb" # Ou o nome do seu repo
+      - docker build -t ex-build-dev:local .
+      - docker tag ex-build-dev:local "$DOCKERHUB_IMAGE_NAME:latest"
+      - echo "Pushing image to $DOCKERHUB_IMAGE_NAME:latest..."
+      - docker push "$DOCKERHUB_IMAGE_NAME:latest"
+      - echo "Push finished.""
        
 unit-test-job:
   stage: unit_test
