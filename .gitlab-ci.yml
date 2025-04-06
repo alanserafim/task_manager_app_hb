@@ -137,25 +137,22 @@ zap_baseline_scan:
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
     - echo "Starting ZAP Baseline Scan on $TARGET_URL using ZAP image ghcr.io/zaproxy/zaproxy:stable"
     - zap-baseline.py --autooff -t $TARGET_URL -I \
-      -J gl-dast-report.json \
-      -r report.html" \
-      -w report.md"
-    - cp /zap/wrk/report.md report.md
-    - cp /zap/wrk/report.html report.html
-    - cp /zap/wrk/gl-dast-report.json gl-dast-report.json
+      -J "$CI_PROJECT_DIR/dast-reports/gl-dast-report.json \
+      -r "$CI_PROJECT_DIR/dast-reports/report.html" \
+      -w "$CI_PROJECT_DIR/dast-reports/report.md"
+   
     #debug
     - echo "ZAP script finished. Checking content of reports directory..."
     - ls -la "$CI_PROJECT_DIR/"
     - ls -la "$CI_PROJECT_DIR/dast-reports/"
-    - ls -la "$CI_PROJECT_DIR/zap/wrk/"
     - echo "Finished checking reports directory."
 
   artifacts:
     when: always
     paths:
-      - report.html
-      - report.md
-      - gl-dast-report.json
+      - "$CI_PROJECT_DIR/dast-reports/report.html
+      - "$CI_PROJECT_DIR/dast-reports/report.md
+      - "$CI_PROJECT_DIR/dast-reports/gl-dast-report.json
     reports:
       dast: reports/gl-dast-report.json
   allow_failure: true
