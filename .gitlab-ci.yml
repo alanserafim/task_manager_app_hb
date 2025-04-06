@@ -130,6 +130,7 @@ zap_baseline_scan:
       alias: ex-build-dev
   script:
     - mkdir -p reports
+    - mkdir -p /zap/wrk
     - echo "Waiting for application service ($APP_IMAGE) to start..."
     - sleep 30
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
