@@ -135,7 +135,10 @@ zap_baseline_scan:
     - sleep 30
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
     - echo "Starting ZAP Baseline Scan on $TARGET_URL using ZAP image ghcr.io/zaproxy/zaproxy:stable"
-    - zap-baseline.py --autooff -t $TARGET_URL -J reports/gl-dast-report.json -r reports/report.html -w reports/report.md
+     - zap-baseline.py --autooff -t $TARGET_URL \
+        -J "$CI_PROJECT_DIR/reports/gl-dast-report.json" \
+        -r "$CI_PROJECT_DIR/reports/report.html" \
+        -w "$CI_PROJECT_DIR/reports/report.md"
   artifacts:
     when: always
     paths:
