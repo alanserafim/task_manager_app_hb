@@ -29,9 +29,13 @@ build_job:
    image: docker:20.10.16
    services:
        - docker:20.10.16-dind
+   before_script:
+       - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
    script:
        - docker build -t ex-build-dev:latest .
-
+       - docker tag ex-build-dev:local $CI_REGISTRY_IMAGE:latest
+       - docker push $CI_REGISTRY_IMAGE:latest
+       
 unit-test-job:
   stage: unit_test
   image: python:3.9-slim
@@ -106,15 +110,15 @@ zap_baseline_scan:
   variables:
     TARGET_URL: "http://ex-build-dev:5000"
   services:
-    - name: ex-build-dev:latest
+    - name: $CI_REGISTRY_IMAGE:latest
       alias: ex-build-dev
   script:
     - mkdir -p reports
     - echo "Waiting for application service to start..."
     - sleep 30
     - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
-    - echo "Starting ZAP Baseline Scan on $TARGET_URL"
-    - zap-baseline.py -t $TARGET_URL -J gl-dast-report.json -r report.html -w report.md --hook=/zap/auth_hook.py
+    - echo "Starting ZAP Baseline Scan on $TARGET_URL using image $CI_REGISTRY_IMAGE:latest"
+    - zap-baseline.py -t $TARGET_URL -J gl-dast-report.json -r report.html -w report.md
   artifacts:
     when: always
     paths:
