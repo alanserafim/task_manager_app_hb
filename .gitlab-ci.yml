@@ -112,9 +112,8 @@ zap_baseline_scan:
     - mkdir -p reports
     - echo "Waiting for application service to start..."
     - sleep 30
-    - wget -q -O /dev/null $TARGET_URL || echo "Warning: Target URL might not be responding yet."
+    - wget -q -O /dev/null $TARGET_URL || echo "Warning:Target URL might not be responding yet."
     - echo "Starting ZAP Baseline Scan on $TARGET_URL"
-    # Garanta que esta linha longa esteja correta também
     - zap-baseline.py -t $TARGET_URL -J gl-dast-report.json -r report.html -w report.md --hook=/zap/auth_hook.py
   artifacts:
     when: always
