@@ -4,11 +4,6 @@ variables:
   COMPOSE_HTTP_TIMEOUT: 600
   DOCKER_BUILDKIT: 0
   COMPOSE_DOCKER_CLI_BUILD: 0
-  POSTGRES_DB: "test_db"
-  POSTGRES_USER: "runner"
-  POSTGRES_PASSWORD: ""
-  POSTGRES_HOST_AUTH_METHOD: "trust"
-  DATABASE_URL: "postgresql://$POSTGRES_USER@postgres/$POSTGRES_DB"
   
 cache:
   key: ${CI_COMMIT_REF_SLUG}
@@ -59,7 +54,7 @@ unit-test-job:
     - pip install --upgrade pip
     - pip install -r requirements.txt
   script:
-    - pytest app/tests/unit_tests/ --cov --cov-report=xml 
+    - pytest app/tests/unit_tests/ --cov --cov-report=xml --cov-report=term-missing
   artifacts:
     when: always
     reports:
@@ -78,6 +73,28 @@ bandit_scan:
     - pip install bandit
   script:
     - bandit -r app/ --exclude tests/ -f json -o bandit-report.json
+  after_script:
+    - |
+      python - <<'EOF'
+      import json
+
+      # Carrega o arquivo JSON gerado pelo Bandit
+      with open('bandit-report.json', 'r') as f:
+          data = json.load(f)
+
+      # Cria um dicionário para contar os níveis de severidade
+      severity_count = {}
+
+      # Itera sobre os resultados e conta por nível de severidade
+      for issue in data.get('results', []):
+          level = issue.get('issue_severity', 'Unknown')
+          severity_count[level] = severity_count.get(level, 0) + 1
+
+      # Imprime o resumo no log
+      print("Resumo do Bandit:")
+      for level, count in severity_count.items():
+          print(f"{level}: {count}")
+      EOF
   artifacts:
     when: always
     reports:
@@ -95,6 +112,27 @@ dependency_check:
   script:
     - mkdir -p reports
     - /usr/share/dependency-check/bin/dependency-check.sh --scan . --enableExperimental --format JSON --project "$CI_PROJECT_NAME" --out reports
+  after_script:
+    - |
+      python - <<'EOF'
+      import json
+      try:
+          with open('reports/dependency-check-report.json', 'r') as f:
+              report = json.load(f)
+          severity_summary = {}
+          for dependency in report.get("dependencies", []):
+              for vulnerability in dependency.get("vulnerabilities", []):
+                  severity = vulnerability.get("severity", "Unknown")
+                  severity_summary[severity] = severity_summary.get(severity, 0) + 1
+          print("Resumo do Dependency-Check:")
+          if severity_summary:
+              for severity, count in severity_summary.items():
+                  print(f"{severity}: {count}")
+          else:
+              print("Nenhuma vulnerabilidade encontrada.")
+      except Exception as e:
+          print("Erro ao gerar o resumo:", e)
+      EOF
   artifacts:
     paths:
       - reports/dependency-check-report.json
@@ -105,6 +143,8 @@ deploy_job:
     image: docker:20.10.16
     services:
         - docker:20.10.16-dind
+    variables:
+    DEPLOY_IMAGE: "docker.io/$DOCKERHUB_USER/task-manager-app-hb:latest"
     before_script:
         - echo "Remove anterior"
         - PORT_CONTAINERS=$(docker ps --filter "publish=5000" -q)
@@ -114,9 +154,10 @@ deploy_job:
             docker rm $PORT_CONTAINERS;
             sleep 5;
           fi
+        - docker pull "$DEPLOY_IMAGE"
     script:
         - echo "Deploying the app"
-        - docker run -d -p 5000:5000 ex-build-dev:latest
+        - docker run -d -p 5000:5000 "$DEPLOY_IMAGE"
 
 zap_baseline_scan:
   stage: dast_scan
@@ -142,7 +183,32 @@ zap_baseline_scan:
     - ls -la "$CI_PROJECT_DIR/"
     - ls -la "$CI_PROJECT_DIR/dast-reports/"
     - echo "Finished checking reports directory."
-
+  after_script:
+    - |
+      python - <<'EOF'
+      import json
+      try:
+          with open('dast-reports/gl-dast-report.json', 'r') as f:
+              data = json.load(f)
+          # Os alertas do ZAP normalmente estão organizados por site
+          alerts = []
+          for site in data.get("site", []):
+              alerts.extend(site.get("alerts", []))
+          severity_summary = {}
+          for alert in alerts:
+              # O campo 'riskdesc' normalmente vem no formato "High (3)", "Medium (2)", etc.
+              riskdesc = alert.get("riskdesc", "Unknown")
+              severity = riskdesc.split(" (")[0]
+              severity_summary[severity] = severity_summary.get(severity, 0) + 1
+          print("Resumo do ZAP DAST Baseline Scan:")
+          if severity_summary:
+              for severity, count in severity_summary.items():
+                  print(f"{severity}: {count}")
+          else:
+              print("Nenhum alerta encontrado.")
+      except Exception as e:
+          print("Erro ao gerar o resumo:", e)
+      EOF
   artifacts:
     when: always
     paths:
