@@ -14,7 +14,7 @@ cache:
 stages:
   - build
   - unit_test
-  - sast_scan
+  - security_scan
   - dependency_scan
   - deploy
   - dast_scan
@@ -24,6 +24,19 @@ build_job:
    image: docker:20.10.16
    services:
        - docker:20.10.16-dind
+   before_script:
+      - echo "--- Debugging Docker Hub Variables ---"
+      - echo "Docker Hub User:[$DOCKERHUB_USER]"
+      - echo "Docker Hub Token Set:[${DOCKERHUB_TOKEN:+set}]"
+      - echo "--------------------------------------"
+      - |
+        if [ -z "$DOCKERHUB_USER" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+          echo "ERRO FATAL: Variáveis DOCKERHUB_USER ou DOCKERHUB_TOKEN não estão definidas corretamente nas configurações de CI/CD do projeto!"
+          exit 1
+        fi
+      - echo "Logging into Docker Hub as $DOCKERHUB_USER..."
+      - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin docker.io
+      - echo "Login attempt finished."
    script:
       - DOCKERHUB_IMAGE_NAME="docker.io/$DOCKERHUB_USER/task-manager-app-hb"
       - docker build -t ex-build-dev:local .
@@ -53,7 +66,7 @@ unit-test-job:
       - htmlcov/
 
 bandit_scan:
-  stage: sast_scan
+  stage: security_scan
   image: python:3.9-slim
   before_script:
     - pip install --upgrade pip
