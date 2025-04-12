@@ -38,7 +38,7 @@ build_job:
       - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin docker.io
       - echo "Login attempt finished."
    script:
-      - DOCKERHUB_IMAGE_NAME="docker.io/$DOCKERHUB_USER/task-manager-app-hb" # Ou o nome do seu repo
+      - DOCKERHUB_IMAGE_NAME="docker.io/$DOCKERHUB_USER/task-manager-app-hb"
       - docker build -t ex-build-dev:local .
       - docker tag ex-build-dev:local "$DOCKERHUB_IMAGE_NAME:latest"
       - echo "Pushing image to $DOCKERHUB_IMAGE_NAME:latest..."
@@ -144,7 +144,7 @@ deploy_job:
     services:
         - docker:20.10.16-dind
     variables:
-    DEPLOY_IMAGE: "docker.io/$DOCKERHUB_USER/task-manager-app-hb:latest"
+      DEPLOY_IMAGE: "docker.io/$DOCKERHUB_USER/task-manager-app-hb:latest"
     before_script:
         - echo "Remove anterior"
         - PORT_CONTAINERS=$(docker ps --filter "publish=5000" -q)
